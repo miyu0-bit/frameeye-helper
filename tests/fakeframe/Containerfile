@@ -1,0 +1,17 @@
+# A pretend Steam Frame for testing FrameEye Helper without a headset: a real OpenSSH server with the
+# "steamos" user (password login), the fake eye tracker, and an x86_64 build of frameeyeosc standing in
+# for the headset's aarch64 one. SteamOS pieces a container lacks (systemd user services, an ARM CPU)
+# are faked by the small scripts in bin/.
+FROM registry.fedoraproject.org/fedora:44
+RUN dnf -y install --setopt=install_weak_deps=False openssh-server procps-ng tar gzip findutils util-linux \
+    && dnf clean all \
+    && useradd -m -u 1000 steamos \
+    && echo 'steamos:frame-test-pw' | chpasswd \
+    && ssh-keygen -A \
+    && sed -i -E "s/^session\s+required\s+pam_loginuid.so/session optional pam_loginuid.so/" /etc/pam.d/sshd \
+    && printf 'PasswordAuthentication yes\nKbdInteractiveAuthentication no\nPermitRootLogin no\n' > /etc/ssh/sshd_config.d/00-fakeframe.conf
+COPY bin/ /usr/local/bin/
+COPY opt/ /opt/fakeframe/
+RUN chmod 755 /usr/local/bin/* /opt/fakeframe/*
+EXPOSE 22
+CMD ["/usr/local/bin/fakeframe-start"]

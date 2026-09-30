@@ -1,0 +1,16 @@
+# Build environment for FrameEye Helper (Windows + Linux) and the Linux panel preview.
+# Everything is built inside this container so nothing has to be installed on the host.
+#   podman build -t frameeye-build -f build/Containerfile build/
+FROM registry.fedoraproject.org/fedora:44
+RUN dnf -y install --setopt=install_weak_deps=False \
+        rust cargo rust-std-static-x86_64-pc-windows-gnu \
+        mingw64-gcc mingw64-binutils mingw64-winpthreads-static \
+        gcc gcc-c++ cmake ninja-build pkgconf-pkg-config make \
+        cairo-devel freetype-devel sdl2-compat-devel vulkan-loader-devel vulkan-headers \
+        file python3 \
+    && dnf clean all
+ENV CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc \
+    CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc \
+    AR_x86_64_pc_windows_gnu=x86_64-w64-mingw32-ar \
+    CARGO_HOME=/cargo-home
+WORKDIR /src

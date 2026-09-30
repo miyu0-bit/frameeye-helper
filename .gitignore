@@ -1,0 +1,11 @@
+# build output
+target/
+target-*/
+/build/cargo-home/
+/build/target-upstream/
+/build/target-fake/
+/build/panel-preview/
+/build/.*.log
+/dist/
+/preview/bin/
+/tests/fakeframe/opt/

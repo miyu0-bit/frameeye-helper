@@ -1,0 +1,3 @@
+[submodule "upstream/frameeyeosc"]
+	path = upstream/frameeyeosc
+	url = https://github.com/sasaken1102r/frameeyeosc.git

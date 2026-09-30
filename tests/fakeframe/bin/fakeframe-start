@@ -1,0 +1,8 @@
+#!/bin/bash
+# Container entrypoint: the user's runtime dir, the fake eye tracker (as steamos), then sshd.
+mkdir -p /run/user/1000 && chown steamos:steamos /run/user/1000 && chmod 700 /run/user/1000
+if [ -n "${KBD_INTERACTIVE:-}" ]; then
+    printf 'PasswordAuthentication no\nKbdInteractiveAuthentication yes\nUsePAM yes\nPermitRootLogin no\n' > /etc/ssh/sshd_config.d/00-fakeframe.conf
+fi
+runuser -u steamos -- bash -c 'nohup /opt/fakeframe/fake-eye-server > /tmp/fake-eye-server.log 2>&1 &'
+exec /usr/sbin/sshd -D -e

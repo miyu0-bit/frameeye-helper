@@ -1,0 +1,6 @@
+#!/bin/bash
+# `journalctl --user -u UNIT -n N`: the fake services' logs.
+unit=""; lines=50
+while [ $# -gt 0 ]; do case "$1" in -u) unit="${2%.service}"; shift ;; -n) lines="$2"; shift ;; esac; shift; done
+log="$HOME/.fakesystemd/$unit.log"
+if [ -f "$log" ]; then tail -n "$lines" "$log"; else echo "-- No entries --"; fi

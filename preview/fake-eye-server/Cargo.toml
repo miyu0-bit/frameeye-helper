@@ -1,0 +1,14 @@
+[package]
+name = "fake-eye-server"
+version = "1.0.0"
+edition = "2024"
+description = "Pretends to be the Steam Frame's eye tracker (shared-memory layout v4) so frameeyeosc can run on a PC"
+license = "MIT"
+publish = false
+
+[dependencies]
+libc = "0.2"
+serde_json = "1"
+
+[profile.release]
+strip = true

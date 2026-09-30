@@ -1,0 +1,39 @@
+#!/bin/bash
+# Just enough of `systemctl --user` for frameeyeosc's install.sh and FrameEye Helper. frameeyeosc.service
+# runs the x86_64 frameeyeosc (the installed aarch64 binary can't run here); the panel only gets a flag.
+state="$HOME/.fakesystemd"; mkdir -p "$state/enabled"
+[ "${1:-}" = "--user" ] && shift
+[ "${1:-}" = "--no-pager" ] && shift
+cmd="${1:-}"; shift || true
+now=false; [ "${1:-}" = "--now" ] && { now=true; shift; }
+unit="${1:-}"; unit="${unit%.service}"
+pidfile="$state/$unit.pid"
+running() { [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; }
+start() {
+    running && return 0
+    case "$unit" in
+        frameeyeosc)
+            [ -f "$HOME/.config/frameeyeosc/env" ] && . "$HOME/.config/frameeyeosc/env"
+            nohup /opt/fakeframe/frameeyeosc $FRAMEEYEOSC_ARGS >> "$state/$unit.log" 2>&1 &
+            echo $! > "$pidfile" ;;
+        *) sleep 100000 >/dev/null 2>&1 & echo $! > "$pidfile" ;;
+    esac
+}
+stop() { if running; then kill "$(cat "$pidfile")"; fi; rm -f "$pidfile"; }
+case "$cmd" in
+    daemon-reload) ;;
+    enable) touch "$state/enabled/$unit"; echo "Created symlink '$HOME/.config/systemd/user/steamvr.service.wants/$unit.service' → '$HOME/.config/systemd/user/$unit.service'."; if $now; then start; fi ;;
+    disable) rm -f "$state/enabled/$unit"; if $now; then stop; fi ;;
+    start) start ;;
+    restart) stop; start ;;
+    try-restart) if running; then stop; start; fi ;;
+    stop) stop ;;
+    is-active)
+        [ "$unit" = "steamvr" ] && { echo active; exit 0; }
+        if running; then echo active; else echo inactive; exit 3; fi ;;
+    is-enabled) if [ -f "$state/enabled/$unit" ]; then echo enabled; else echo disabled; exit 1; fi ;;
+    status)
+        echo "● $unit.service"
+        if running; then echo "     Active: active (running) (fake systemd, pid $(cat "$pidfile"))"; else echo "     Active: inactive (dead)"; fi ;;
+    *) echo "fake systemctl: $cmd not supported" >&2; exit 1 ;;
+esac
